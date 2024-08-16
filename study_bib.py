@@ -30,6 +30,7 @@ tracks = [["cota", "cotb", "p", "flp", "localx", "localy", "pT", "PID"]]
 
 # gather input files 
 # Note: these are using the path convention from the singularity command in the MuCol tutorial (see README)
+print("running")
 directory_path = "/cvmfs/muoncollider.cern.ch/datasets/bib/MuColl_v1/example/"
 for filename in os.listdir(directory_path):
 
@@ -71,48 +72,55 @@ for filename in os.listdir(directory_path):
             mcp = hit.getMCParticle()
             hit_pdg = mcp.getPDG() if mcp else None
             hit_id = mcp.id() if mcp else None
+    
+            if hit_pdg==22: 
+                #print("PHOTON!")
+                continue
 
             # momentum at production
             mcp_p = mcp.getMomentum()
-            mcp_tlv = ROOT.TLorentzVector()
-            mcp_tlv.SetPxPyPzE(mcp_p[0], mcp_p[1], mcp_p[2], mcp.getEnergy())
+            #mcp_tlv = ROOT.TLorentzVector()
+            mcp_tlv = ROOT.Math.PxPyPzMVector(mcp_p[0], mcp_p[1], mcp_p[2], mcp.getMass())
 
             #momentum at hit
             hit_p = hit.getMomentum()
-            hit_tlv = ROOT.TLorentzVector()
-            hit_tlv.SetPxPyPzE( hit_p[0], hit_p[1], hit_p[3], mcp.getEnergy())
+            #hit_tlv = ROOT.TLorentzVector()
+            hit_tlv = ROOT.Math.PxPyPzMVector(hit_p[0], hit_p[1], hit_p[2], mcp.getMass())
 
             prodx,prody,prodz=mcp.getVertex()[0],mcp.getVertex()[1],mcp.getVertex()[2]
             endx,endy,endz=mcp.getEndpoint()[0],mcp.getEndpoint()[1],mcp.getEndpoint()[2]
             prodrxy = (prodx**2 + prody**2)**0.5
             endrxy = (endx**2 + endy**2)**0.5
 
-            if hit_id != hit_id_last : 
-                plt.plot1D("hit_mcp_pt"  ,";mcp pt;hits" , mcp_tlv.Pt(), 100, 0, 1)
-                plt.plot1D("hit_mcp_eta" ,";mcp eta;hits" , mcp_tlv.Eta(), 100, -3.2, 3.2)
-                plt.plot1D("hit_mcp_theta" ,";mcp theta;hits" , mcp_tlv.Theta(), 100, 0, 3.2)
-                plt.plot1D("hit_mcp_phi" ,";mcp phi;hits" , mcp_tlv.Phi(), 100, -3.2, 3.2)
-                plt.plot1D("hit_pt"  ,";incident pt;hits" , hit_tlv.Pt(), 100, 0, 1)
-                plt.plot1D("hit_eta" ,";incident eta;hits" , hit_tlv.Eta(), 100, -3.2, 3.2)
-                plt.plot1D("hit_theta" ,";incident theta;hits" , hit_tlv.Theta(), 100, 0,3.2)
-                plt.plot1D("hit_phi" ,";incident phi;hits" , hit_tlv.Phi(), 100, -3.2, 3.2)
-                plt.plot1D("hit_mcp_prodrxy" ,";mcp prod rxy;hits" , prodrxy, 100, 0,150)
-                plt.plot1D("hit_mcp_prodz"   ,";mcp prod z;hits" , prodz, 100, -1000,1000)
-                plt.plot1D("hit_mcp_endrxy"  ,";mcp end rxy;hits" , endrxy, 100, 0, 150)
-                plt.plot1D("hit_mcp_endz"    ,";mcp end z;hits" , endz, 100, -1000, 1000)
+            #if hit_id != hit_id_last : 
+            plt.plot1D("hit_mcp_e"  ,";mcp e [GeV];hits" , mcp_tlv.E(), 100, 0, 0.2)
+            plt.plot1D("hit_mcp_pt"  ,";mcp pt [GeV];hits" , mcp_tlv.Pt(), 100, 0, 0.2)
+            plt.plot1D("hit_mcp_eta" ,";mcp eta;hits" , mcp_tlv.Eta(), 100, -3.2, 3.2)
+            plt.plot1D("hit_mcp_theta" ,";mcp theta;hits" , mcp_tlv.Theta(), 100, 0, 3.2)
+            plt.plot1D("hit_mcp_phi" ,";mcp phi;hits" , mcp_tlv.Phi(), 100, -3.2, 3.2)
+            plt.plot1D("hit_pt"  ,";incident pt [GeV];hits" , hit_tlv.Pt(), 100, 0, 0.2)
+            plt.plot1D("hit_eta" ,";incident eta;hits" , hit_tlv.Eta(), 100, -3.2, 3.2)
+            plt.plot1D("hit_theta" ,";incident theta;hits" , hit_tlv.Theta(), 100, 0,3.2)
+            plt.plot1D("hit_phi" ,";incident phi;hits" , hit_tlv.Phi(), 100, -3.2, 3.2)
+            plt.plot1D("hit_eDep" ,";incident e deposit [MeV];hits" , hit.getEDep()*1000, 100, 0, 0.5)
+            plt.plot1D("hit_mcp_prodrxy" ,";mcp prod rxy [mm];hits" , prodrxy, 100, 0,150)
+            plt.plot1D("hit_mcp_prodz"   ,";mcp prod z [mm];hits" , prodz, 100, -1000,1000)
+            plt.plot1D("hit_mcp_endrxy"  ,";mcp end rxy [mm];hits" , endrxy, 100, 0, 150)
+            plt.plot1D("hit_mcp_endz"    ,";mcp end z [mm];hits" , endz, 100, -1000, 1000)
 
-                cota = 1./np.tan(hit_tlv.Phi()) 
-                cotb = 1./np.tan(hit_tlv.Theta())
+            # double check if any bugs
+            cota = 1./np.tan(hit_tlv.Phi()) 
+            cotb = 1./np.tan(hit_tlv.Theta())
 
-                plt.plot1D("hit_cota"    ,";cota;hits" , cota, 100, -5, 5)
-                plt.plot1D("hit_cotb"    ,";cotb;hits" , cotb, 100, 0, 100)
+            plt.plot1D("hit_cota"    ,";cota;hits" , cota, 100, -10,10)
+            plt.plot1D("hit_cotb"    ,";cotb;hits" , cotb, 100, -10,10)
 
-                p = mcp_tlv.P()
-                pt = mcp_tlv.Pt()
-                track = [cota, cotb, p, 0, x, y, pt, hit_pdg] 
-                tracks.append(track)
-                #print("")
-                #print("NEW PARTICLE")
+            p = mcp_tlv.P()
+            pt = mcp_tlv.Pt()
+            track = [cota, cotb, p, 0, x, y, pt, hit_pdg] 
+            tracks.append(track)
+            #print("")
+            #print("NEW PARTICLE")
 
             # helpful printout
             #print("x,y,z,t={:.1f},{:.1f},{:.1f},{:.3f}".format(x,y,z,t))
@@ -150,6 +158,7 @@ for filename in os.listdir(directory_path):
         #    endrxy = (endx**2 + endy**2)**0.5
         #    print("prod rxy,z={:.1f},{:.1f}".format(prodrxy,prodz))
         #    print("end  rxy,z={:.1f},{:.1f}".format(endrxy ,endz))
+
         ## only one event
         #break
     # only one file
