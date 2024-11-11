@@ -19,7 +19,7 @@ plt = PlotHelper()
 plot = False
 
 # Set up some options, constants
-max_events = 1000 # Set to -1 to run over all events
+max_events = -1 # Set to -1 to run over all events
 max_npart = 100000 
 Bfield = 3.57 # T for legacy
 
@@ -80,7 +80,7 @@ def getYlocalAndGamma(x,y):
     
     gamma=sensorAngles[index]
 
-    return ylocal, gamma
+    return -ylocal, gamma
 
 # setup ouptut data
 tracks = [] # [["cota", "cotb", "p", "flp", "localx", "localy", "pT", "hittime", "PID"]]
@@ -130,7 +130,7 @@ for filename in os.listdir(directory_path):
             hit_pdg = mcp.getPDG() if mcp else None
             hit_id = mcp.id() if mcp else None
 
-            if abs(hit_pdg) != 11 and abs(hit_pdg) != 211 and abs(hit_pdg) != 13: continue
+            if abs(hit_pdg) != 13: continue 
 
             # momentum at production
             mcp_p = mcp.getMomentum()
@@ -176,21 +176,18 @@ for filename in os.listdir(directory_path):
             # Define unit vector of track at tracker edge with respect to barrel
             theta=hit_tlv.Theta()
             phi=hit_tlv.Phi()
-            x=np.sin(theta)*np.cos(phi)
-            y=np.sin(theta)*np.sin(phi)
-            z=np.cos(theta) 
-
-            # Transform into rotated coordinate system (sensor coordinate system sort of)
-            xp=x*np.cos(np.pi/2-gamma0)+y*np.sin(np.pi/2-gamma0)
-            yp=-x*np.sin(np.pi/2-gamma0)+y*np.cos(np.pi/2-gamma0)
             
-            beta=np.arctan2(yp,xp)
-            alpha=np.arctan2(yp,z)
-
-            # Since we are unflipped, we must adjust alpha and beta 
+            beta=phi-(gamma0-np.pi/2)
+            alpha=theta
+            
+            # Since we are unflipped, we must adjust alpha and beta, and flip y-local
             cotb = 1./np.tan(beta+np.pi)
             cota = 1./np.tan(2*np.pi-alpha)
-
+            ylocal *= -1 
+            """
+            cotb = 1./np.tan(beta)
+            cota = 1./np.tan(alpha)
+            """
             p = mcp_tlv.P()
             pt = mcp_tlv.Pt()
             track = [cota, cotb, p, 0, xlocal, ylocal, pt, hit_pdg]
@@ -246,16 +243,30 @@ fout = ROOT.TFile.Open("plots/sig_out.root","RECREATE")
 fout.cd()
 plt.drawAll()
 
-# Writing to csv file
-filename = "sig_tracklist.txt"
+file_path = "./signal_tracklists"
 float_precision=5
-with open(filename, 'w') as file:
-    for track in tracks:
+binsize = 500
+numFiles = int(np.ceil(len(tracks)/binsize))
 
-        # set flp to an int
-        track = list(track)
-        #track[3] = int(track[3])
+# check if directory exists
+if not os.path.isdir(file_path):
+    os.makedirs(file_path)
+else:
+    # Empty folder
+    files = os.listdir(file_path)
+    for f in files:
+        if os.path.isfile(f"{file_path}/{f}"):
+            os.remove(f"{file_path}/{f}")
 
-        formatted_sublist = [f"{element:.{float_precision}f}" if isinstance(element, float) else element for element in track]
-        line = ' '.join(map(str, formatted_sublist)) + '\n'
-        file.write(line)
+for fileNum in range(numFiles):
+    with open(f"{file_path}/sig_tracklist{fileNum}.txt", 'w') as file:
+        for track in tracks[fileNum*binsize:(fileNum+1)*binsize]:
+
+            # set flp to an int
+            track = list(track)
+
+            formatted_sublist = [f"{element:.{float_precision}f}" if isinstance(element, float) else element for element in track]
+            line = ' '.join(map(str, formatted_sublist)) + '\n'
+            file.write(line)
+
+

@@ -21,7 +21,7 @@ plt = PlotHelper()
 plot = False
 
 # Set up some options, constants
-max_events = -1 # Set to -1 to run over all events
+max_events = 10 # Set to -1 to run over all events
 max_npart = 100000 
 Bfield = 3.57 # T for legacy
 
@@ -29,7 +29,7 @@ npart = 0
 nevts = 0
 
 # setup ouptut data
-tracks = [] #[["cota", "cotb", "p", "flp", "localx", "localy", "pT", "PID"]]
+tracks = [['phi', 'theta', 'x', 'y']] 
 
 # gather input files 
 # Note: these are using the path convention from the singularity command in the MuCol tutorial (see README)
@@ -121,29 +121,12 @@ for filename in os.listdir(directory_path):
                 plt.plot1D("hit_phi"    ,";cota;hits" , phi, 100, -10,10)
                 plt.plot1D("hit_theta"    ,";cotb;hits" , theta, 100, -10,10)
                 plt.plot1D("hit_t"    ,";t;hits" , t, 100, -1,10)
-
-            ylocal, gamma0 = getYlocalAndGamma(x,y)
-            xlocal=0
             
             # Define unit vector of track at tracker edge with respect to barrel
             theta=hit_tlv.Theta()
             phi=hit_tlv.Phi()
-            
-            beta=phi-(gamma0-np.pi/2)
-            alpha=theta
 
-            # Since we are unflipped, we must adjust alpha and beta, and flip y-local
-            cotb = 1./np.tan(beta+np.pi)
-            cota = 1./np.tan(2*np.pi-alpha)
-            ylocal *= -1
-
-            # Since we are unflipped, we must adjust alpha and beta 
-            cotb = 1./np.tan(beta+np.pi)
-            cota = 1./np.tan(2*np.pi-alpha)
-
-            p = mcp_tlv.P()
-            pt = mcp_tlv.Pt()
-            track = [cota, cotb, p, 0, xlocal, ylocal, pt, hit_pdg]
+            track = [phi, theta, x, y]
             tracks.append(track)
 
             #print("")
@@ -197,29 +180,16 @@ fout.cd()
 plt.drawAll()
 
 # Writing to csv file
-file_path = "./BIB_tracklists"
+filename = "BIB_hits.txt"
 float_precision=5
-binsize = 500
-numFiles = int(np.ceil(len(tracks)/binsize))
+with open(filename, 'w') as file:
+    for track in tracks:
 
-# check if directory exists
-if not os.path.isdir(file_path):
-    os.makedirs(file_path)
-else:
-    # Empty folder
-    files = os.listdir(file_path)
-    for f in files:
-        if os.path.isfile(f"{file_path}/{f}"):
-            os.remove(f"{file_path}/{f}")
+        # set flp to an int
+        track = list(track)
+        #track[3] = int(track[3])
 
-for fileNum in range(numFiles):
-    with open(f"{file_path}/BIB_tracklist{fileNum}.txt", 'w') as file:
-        for track in tracks[fileNum*binsize:(fileNum+1)*binsize]:
-
-            # set flp to an int
-            track = list(track)
-
-            formatted_sublist = [f"{element:.{float_precision}f}" if isinstance(element, float) else element for element in track]
-            line = ' '.join(map(str, formatted_sublist)) + '\n'
-            file.write(line)
+        formatted_sublist = [f"{element:.{float_precision}f}" if isinstance(element, float) else element for element in track]
+        line = ' '.join(map(str, formatted_sublist)) + '\n'
+        file.write(line)
 
