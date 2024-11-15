@@ -176,9 +176,14 @@ for filename in os.listdir(directory_path):
             # Define unit vector of track at tracker edge with respect to barrel
             theta=hit_tlv.Theta()
             phi=hit_tlv.Phi()
-            
+
+            x=np.sin(theta)*np.cos(phi)
+            y=np.sin(theta)*np.sin(phi)
+            z=np.cos(theta) 
+            yp=x*np.sin(np.pi/2-gamma0)+y*np.cos(np.pi/2-gamma0)
+            alpha=np.arctan2(yp,z)
+
             beta=phi-(gamma0-np.pi/2)
-            alpha=theta
             
             # Since we are unflipped, we must adjust alpha and beta, and flip y-local
             cotb = 1./np.tan(beta+np.pi)
@@ -190,7 +195,7 @@ for filename in os.listdir(directory_path):
             """
             p = mcp_tlv.P()
             pt = mcp_tlv.Pt()
-            track = [cota, cotb, p, 0, xlocal, ylocal, pt, hit_pdg]
+            track = [cota, cotb, p, 0, xlocal, ylocal, pt, theta, hit_pdg]
             tracks.append(track)
 
             print("")
