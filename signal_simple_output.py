@@ -19,7 +19,7 @@ plt = PlotHelper()
 plot = False
 
 # Set up some options, constants
-max_events = 10000 # Set to -1 to run over all events
+max_events = -1 # Set to -1 to run over all events
 max_npart = 100000 
 Bfield = 3.57 # T for legacy
 
@@ -30,7 +30,7 @@ sensorAngles = np.arange(-np.pi,np.pi+2*np.pi/8,np.pi/8)
 
 
 # setup ouptut data
-tracks = [['phi', 'theta', 'x', 'y', 'pt', 'pid', 'phi0', 'prodx','prody','prodz',]] 
+tracks = [['phi', 'theta', 'x', 'y', 'z', 'pt', 'p','prodx', 'prody', 'prodz', 't', 'pid']] 
 
 # gather input files 
 # Note: these are using the path convention from the singularity command in the MuCol tutorial (see README)
@@ -38,7 +38,7 @@ directory_path = "./"
 for filename in os.listdir(directory_path):
 
     if "sim.slcio" not in filename: continue
-    # Get the full path to the file
+    # Get the full path to the file 
     file_path = os.path.join(directory_path, filename)
     print(file_path)
     reader = pyLCIO.IOIMPL.LCFactory.getInstance().createLCReader()
@@ -77,7 +77,7 @@ for filename in os.listdir(directory_path):
             hit_pdg = mcp.getPDG() if mcp else None
             hit_id = mcp.id() if mcp else None
 
-            if abs(hit_pdg) != 13 and abs(hit_pdg) != 11: continue
+            #if abs(hit_pdg) != 13 and abs(hit_pdg) != 11: continue
 
             # momentum at production
             mcp_p = mcp.getMomentum()
@@ -103,7 +103,7 @@ for filename in os.listdir(directory_path):
             #p = hit_tlv.P()
             #pt = hit_tlv.Pt()
 
-            track = [phi, theta, x, y, pt, hit_pdg, mcp_tlv.Phi(), prodx, prody, prodz]
+            track = [phi, theta, x, y, z, pt, p, prodx, prody, prodz, t, hit_pdg]
             tracks.append(track)
 
             print("")
@@ -150,12 +150,13 @@ for filename in os.listdir(directory_path):
 
         ## only one event
     # only one file
-
+print(nevts)
 # save histos to file
+"""
 fout = ROOT.TFile.Open("plots/sig_out.root","RECREATE")
 fout.cd()
 plt.drawAll()
-
+"""
 # Writing to csv file
 filename = "sig_hits.txt"
 float_precision=5
