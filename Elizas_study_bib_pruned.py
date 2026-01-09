@@ -36,13 +36,22 @@ tracks = [] #[["cota", "cotb", "p", "flp", "localx", "localy", "pT", "PID"]]
 print("running")
 directory_path = "/cvmfs/public-uc.osgstorage.org/ospool/uc-shared/public/futurecolliders/BIB10TeV/sim_mp_pruned/" 
 directory_path = "/cvmfs/public-uc.osgstorage.org/ospool/uc-shared/public/futurecolliders/BIB10TeV/sim_mm_pruned/" 
+# directory_path = "/home/dabadjiev/smartpixels_ml_dsabadjiev/smartpixML/reGenBIB/produceSmartPixMuC/problemSlcios" 
+# directory_path = "/home/dabadjiev/smartpixels_ml_dsabadjiev/smartpixML/reGenBIB/produceSmartPixMuC/test_slcio_acouple/"
 #"/cvmfs/muoncollider.cern.ch/datasets/bib/MuColl_v1/example/" # "/cvmfs/public-uc.osgstorage.org/ospool/uc-shared/public/futurecolliders/BIB10TeV/sim_mm_pruned"
 #"/cvmfs/public-uc.osgstorage.org/ospool/uc-shared/public/futurecolliders/BIB10TeV/" #"/cvmfs/muoncollider.cern.ch/datasets/bib/MuColl_v1/example/"
-outTrackDir = "./Tracklists0730_mm/BIB_tracklists"
+outTrackDir = "./Tracklists0106_mm/BIB_tracklists/"
 print("will output into "+outTrackDir)
-
+count = 0;
+fileCountStart = 0
+fileCountLimit = 1000
 for filename in os.listdir(directory_path):
-
+    count +=1
+    if count<fileCountStart:
+        continue
+    print("count", count)
+    if count>fileCountLimit:
+        break
     # Get the full path to the file
     file_path = os.path.join(directory_path, filename)
     if not file_path.endswith(".slcio"):
@@ -100,6 +109,10 @@ for filename in os.listdir(directory_path):
             hit_p = hit.getMomentum()
             hit_tlv = ROOT.TLorentzVector()
             hit_tlv.SetPxPyPzE( hit_p[0], hit_p[1], hit_p[2], m_electron) #mcp.getEnergy())
+            if True:
+                p1Calc = np.sqrt(hit_p[2]*hit_p[2]+hit_tlv.Pt()*hit_tlv.Pt())
+                if np.abs(p1Calc/hit_tlv.P() -1)>0.000001:
+                    print(f"hit momentum {hit_p[2]}, pt {hit_tlv.Pt()}, p {hit_tlv.P()}, sqrt(pt^2 + pz^2 {p1Calc}")
 
 
             # prodx,prody,prodz=mcp.getVertex()[0],mcp.getVertex()[1],mcp.getVertex()[2]
@@ -114,7 +127,12 @@ for filename in os.listdir(directory_path):
                 # plt.plot1D("hit_mcp_eta" ,";mcp eta;hits" , mcp_tlv.Eta(), 100, -3.2, 3.2)
                 # plt.plot1D("hit_mcp_theta" ,";mcp theta;hits" , mcp_tlv.Theta(), 100, 0, 3.2)
                 # plt.plot1D("hit_mcp_phi" ,";mcp phi;hits" , mcp_tlv.Phi(), 100, -3.2, 3.2)
+                plt.plot1D("hit_pz"  ,";incident pz [GeV];hits" , hit_p[2], 100, 0, 0.2)
+                plt.plot1D("hit_pz_Long"  ,";incident pz [GeV];hits" , hit_p[2], 100, 0, 1)
+                plt.plot1D("hit_p"  ,";incident p [GeV];hits" , hit_tlv.P(), 100, 0, 0.2)
+                plt.plot1D("hit_p_Long"  ,";incident p [GeV];hits" , hit_tlv.P(), 100, 0, 1)
                 plt.plot1D("hit_pt"  ,";incident pt [GeV];hits" , hit_tlv.Pt(), 100, 0, 0.2)
+                plt.plot1D("hit_pt_Long"  ,";incident pt [GeV];hits" , hit_tlv.Pt(), 100, 0, 1)
                 plt.plot1D("hit_eta" ,";incident eta;hits" , hit_tlv.Eta(), 100, -3.2, 3.2)
                 plt.plot1D("hit_theta" ,";incident theta;hits" , hit_tlv.Theta(), 100, 0,3.2)
                 plt.plot1D("hit_phi" ,";incident phi;hits" , hit_tlv.Phi(), 100, -3.2, 3.2)
