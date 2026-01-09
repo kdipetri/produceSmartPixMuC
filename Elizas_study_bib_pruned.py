@@ -109,6 +109,7 @@ for filename in os.listdir(directory_path):
             hit_p = hit.getMomentum()
             hit_tlv = ROOT.TLorentzVector()
             hit_tlv.SetPxPyPzE( hit_p[0], hit_p[1], hit_p[2], m_electron) #mcp.getEnergy())
+            print("FIX SETTING MASS INSTEAD OF ENERGY!!!!")
             if True:
                 p1Calc = np.sqrt(hit_p[2]*hit_p[2]+hit_tlv.Pt()*hit_tlv.Pt())
                 if np.abs(p1Calc/hit_tlv.P() -1)>0.000001:
